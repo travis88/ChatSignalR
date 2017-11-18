@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SignalR Chat</title>
+</head>
+<body>
+    <div id="loginBlock">
+        Введите логин:<br>
+        <input type="text" id="userName">
+        <input type="button" id="loginBtn" value="Войти">
+    </div><br>
+
+    <div id="header"></div>
+
+    <div id="inputForm">
+        <input type="text" id="message">
+        <input type="button" id="sendBtn" value="Отправить">
+    </div>
+    <div id="chatroom"></div>
+
+    <script src="js/signalr-client-1.0.0-alpha2-final.min.js"></script>
+    <script>
+        let hubUrl = 'http://localhost:5000/chat';
+        let httpConnection = new signalR.HttpConnection(hubUrl);
+        let hubConnection = new signalR.HubConnection(httpConnection);
+        let userName = '';
+
+        hubConnection.on("Send", function(message, userName) {
+            let userNameElem = document.createElement("b");
+            userNameElem.appendChild(document.createTextNode(userName + ': '));
+
+            let elem = document.createElement("p");
+            elem.appendChild(userNameElem);
+            elem.appendChild(document.createTextNode(message));
+
+            let firstElem = document.getElementById("chatroom").firstChild;
+            document.getElementById("chatroom").insertBefore(elem, firstElem);
+        });
+
+        document.getElementById("loginBtn").addEventListener("click", function (e) {
+            userName = document.getElementById("userName").value;
+            document.getElementById("header").innerHTML = '<h3>Welcome ' + userName + '</h3>';
+        });
+
+        document.getElementById("sendBtn").addEventListener("click", function(e) {
+            let message = document.getElementById("message").value;
+            hubConnection.invoke("Send", message, userName);
+        });
+
+        hubConnection.start();
+    </script>
+</body>
+</html>
